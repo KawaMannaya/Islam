@@ -1,0 +1,9 @@
+---
+title: "Does Social Media Usage Affect Sleep Duration Among Students?"
+---
+
+This is my final assignment website. Check out my “R Studio Project” page to learn more about my work with an open-access dataset and to see a recent data analysis I completed using R programming.
+
+![](Research-news-Factors-contributing-to-secondary-students-sleep.jpg)
+
+*Usual student's experience)*

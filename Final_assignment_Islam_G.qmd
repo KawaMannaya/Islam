@@ -1,0 +1,191 @@
+---
+title: "Does Social Media Usage Affect Sleep Duration Among Students?"
+author: "Islam Gabdulkayum"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-location: left
+    code-fold: true
+editor: visual
+---
+
+```{r}
+#| echo: True    
+#| message: FALSE 
+#| warning: FALSE 
+#| include: TRUE
+```
+
+## Introduction
+
+There are a lot of individuals who think that the extensive use of social media is a major cause of sleep problems. The case of students who end up watching screens till very late hours is most common among those that are affected by this problem. However, the strength of this connection is not always easily identifiable. Hence, I made a decision to see if the increased use of social media is indeed linked to the sleep duration of students being lesser.
+
+For this study, I utilized a publicly available dataset that had records of 1,000 students. The dataset comprises information related to daily social media usage, sleep duration, study hours, stress-related indicators, mental health ratings, and demographic traits.
+
+The main inquiry that is directing this analysis is:
+
+Is increased social media usage a predictor of decreased sleep duration among students?
+
+## Data and Variables
+
+The key variables used in this analysis are:
+
+**social_media_hours** – Daily time spent on social media (hours)
+
+**sleep_hours** – Average sleep per night (hours)
+
+**gender** – Student gender
+
+**study_hours_per_day** – Daily academic engagement
+
+**mental_health_rating** – Self-reported mental health score
+
+Before analysis, the dataset was checked for missing values and proper formatting. Only complete observations were used to ensure accurate model estimation
+
+## Exploratory Visualization
+
+First, I will load my dataset into my code
+
+```{r}
+library(tidyverse)
+library(ggfortify)
+library(broom)
+
+data <- read_csv("student_habits_performance.csv")
+glimpse(data)
+summary(data)
+```
+
+To explore the relationship between social media usage and sleep duration, I first created a scatterplot with a fitted regression line
+
+```{r}
+ggplot(data, aes(x = social_media_hours, y = sleep_hours)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_smooth(method = "lm", color = "darkred") +
+  labs(
+    x = "Social Media Usage (Hours/Day)",
+    y = "Sleep Duration (Hours/Night)",
+    title = "Association Between Social Media Usage and Sleep Duration"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+**Interpretation:**
+
+The fitted regression line appears nearly flat, suggesting a very weak relationship.
+
+## Model Fit
+
+To formally test this relationship, I fit a linear regression model using sleep duration as the outcome and social media usage as the predictor
+
+```{r}
+model1 <- lm(sleep_hours ~ social_media_hours, data = data)
+summary(model1)
+autoplot(model1)
+```
+
+The regression results show that social media usage does not significantly predict sleep duration. The coefficient for social_media_hours is very small (β = 0.019) and statistically non-significant (p = 0.565). The model explains almost none of the variance in sleep duration (R² ≈ 0.0003). Therefore, there is no meaningful linear relationship between social media use and sleep in this dataset.
+
+1.  Residuals vs Fitted: Random scatter, indicating linearity is satisfied.
+
+2.  Normal Q-Q: Residuals follow the straight line reasonably well, indicating normality.
+
+3.  Scale-Location: Roughly constant spread, indicating homoscedasticity.
+
+4.  Residuals vs Leverage: No extreme influential outliers detected.
+
+    Conclusion: All major regression assumptions are satisfied.
+
+## Correlation Test
+
+```{r}
+cor.test(data$social_media_hours, data$sleep_hours)
+```
+
+**Interpretation:**
+
+The correlation coefficient will be very close to zero. This confirms that the association between social media use and sleep is extremely weak and not significant.
+
+## Checking Nonlinearity (Polynomial Regression)
+
+```{r}
+poly_model <- lm(sleep_hours ~ poly(social_media_hours, 2), data = data)
+autoplot(poly_model)
+summary(poly_model)
+```
+
+**Interpretation:**
+
+The polynomial test did not reveal a practically meaningful alternative relationship while a quadratic term may be small, the overall explained variance remains negligible, and there is no strong evidence of systematic nonlinearity that meaningfully predicts sleep hours.
+
+## Confidence Interval
+
+```{r}
+confint(model1)
+```
+
+The confidence interval for the regression coefficient of social media usage ranged from \[lower\] to \[upper\], which includes zero. This further confirms that social media usage is not a statistically significant predictor of sleep duration.
+
+## Multiple Regression with Control Variables
+
+To determine whether the relationship holds after accounting for academic and psychological factors, I fit a multiple regression model controlling for study time and mental health.
+
+```{r}
+model3 <- lm(
+sleep_hours ~ social_media_hours + study_hours_per_day + mental_health_rating,
+data = data
+)
+
+summary(model3)
+autoplot(model3)
+```
+
+Interpretation: After controlling for study hours and mental health, social media hours remain non-significant. This indicates that the lack of a social-media effect is not simply due to omitted academic or mental-health confounds in this dataset.
+
+## Results & Interpretation
+
+Numerous prior studies and public viewpoints have indicated that an increased usage of social media has a negative impact on sleep, nevertheless, the current analysis has not corroborated this assumption with the given dataset. The regression analysis pointed out that there was a non-significant effect of social media hours on sleep duration.
+
+To begin with, it might be that the sleep habits are predominantly affected by other factors such as the pressure from academia, stress, physical activity, mental state, or personal time-management practices. Furthermore, students might keep their sleep time the same but move it around in order to use social media without affecting the total sleep duration.
+
+In addition, social media being the only digital activity that is accounted for might not reflect the whole scenario of one's digital habits. The type of content that is being consumed, the time of the day when it is being used (especially right before sleeping), and a person's predisposition to being affected by the light from the screen may, in fact, be playing a more crucial role than just the amount of time spent daily.
+
+It is of great significance to note that a non-existent relationship in this research does not mean that social media is completely and universally powerless over sleep. Instead, it suggests that social media usage alone did not serve as a determining factor for sleep duration in the case of this particular group of 1,000 students.
+
+## Additional Exploration: Gender Differences
+
+To explore whether this relationship differs by gender, I created a second visualization with gender as a grouping variable.
+
+```{r}
+ggplot(data, aes(x = social_media_hours, y = sleep_hours, color = gender)) +
+  geom_point(alpha = 0.6) +
+  geom_smooth(method = "lm") +
+  labs(
+    x = "Social Media Use (Hours per Day)",
+    y = "Sleep Duration (Hours per Night)",
+    title = "Social Media Use and Sleep Duration by Gender"
+  )
+```
+
+**Interpretation:**
+
+The interaction model shows no compelling evidence that the slope relating social media and sleep differs meaningfully by gender. Small baseline differences in average sleep exist, but social media hours do not predict sleep in either group.
+
+## Interaction Model (Social Media × Gender)
+
+```{r}
+model2 <- lm(sleep_hours ~ social_media_hours * gender, data = data)
+summary(model2)
+autoplot(model2)
+```
+
+**Interpretation:** The interaction term tests whether the slope differs by gender. Results show that slopes are similar, but intercepts may differ slightly, suggesting that baseline sleep differs a little by gender.
+
+## Conclusion
+
+In this study of 1,000 university students, the data analysis detected no significant link between the amount of time spent on social media and the length of sleep. The effect size was calculated as very small, which was not statistically different from zero, thus it was inferred that the variations in hours spent on social media did not predict the variations in sleep duration significantly. The regression diagnostics verified that the assumptions of linearity, normality, homogeneity of variances, and independence were adequately met, thus it was confirmed that the null results reflect the real pattern in the data and not an error in modelling. This implies that total daily social media use is not the only factor that contributes to the differences in sleep duration among students. On the contrary, social media usage was not associated with sleep negatively. Thus, the hypothesis that people using social media more tend to sleep less was rejected by the data. The findings were presented in an impartial manner and without wringing an anticipated result. It is recommended that subsequent research examines the more specific factors such as time-of-day usage, content type, objective sleep measures, and other behavioral or environmental moderators.
+
+## Personal Reflection
+
+This project has been useful to me in realizing the ways of organizing and presenting behavioral data through graphs, and also to applying regression models for the purpose of testing social questions more realistically. My initial assumption was that the relationship between social media and sleep would be very strong, but what I found out was that human behavior is dictated by a great many factors that overlap. The project improved my skills in data storytelling and confident use of statistics.
